@@ -16,9 +16,16 @@ for(int istep=0; istep<NSTEP; istep++){
   }
 }
 //end CPU wallclock time
-//总共平均耗时9.6μs；kernel执行耗时2.9us；
-//缺点：启动kernel-->执行kernel-->等待执行完；
 
+/*
+总共平均耗时9.6μs；kernel执行耗时2.9us；
+缺点：启动kernel-->执行kernel-->等待执行完；
+
+device和host是异步的，当CPU调用device函数后就返回了;
+cudaMemcpy函数是个同步函数。
+cudaError_t cudaMemcpyAsync(void* dst, const void* src, size_t count,cudaMemcpyKind kind, cudaStream_t stream = 0);
+值得注意的就是最后一个参数，stream表示流，一般情况设置为默认流，这个函数和主机是异步的，执行后控制权立刻归还主机，
+*/
 
 //改进
 // start wallclock timer
@@ -29,9 +36,13 @@ for(int istep=0; istep<NSTEP; istep++){
   cudaStreamSynchronize(stream);
 }
 //end wallclock timer
-//总共平均耗时3.8μs；kernel执行耗时2.9us；
-//优点：启动下一个kernel和执行上一个kernel，能够并行起来；
-//缺点：每个kernel还得启动一次；
+
+/*
+ 总共平均耗时3.8μs；kernel执行耗时2.9us；
+ 优点：启动下一个kernel和执行上一个kernel，能够并行起来；
+ 缺点：每个kernel还得启动一次；
+*/
+
 
 //Graph优化版本：
 bool graphCreated=false;

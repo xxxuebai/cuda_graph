@@ -43,8 +43,10 @@ typedef struct callBackData {
 __global__ void reduce(float *inputVec, double *outputVec, size_t inputSize,
                        size_t outputSize) {
   __shared__ double tmp[THREADS_PER_BLOCK];
-
+  
+//Handle to thread block group
   cg::thread_block cta = cg::this_thread_block();
+  
   size_t globaltid = blockIdx.x * blockDim.x + threadIdx.x;
 
   double temp_sum = 0.0;

@@ -30,27 +30,27 @@
 #include <helper_cuda.h>
 #include <vector>
 
-namespace cg = cooperative_groups;
+namespace cg = cooperative_groups;                                                              //创建一个空间叫 cg
 
-#define THREADS_PER_BLOCK 512
-#define GRAPH_LAUNCH_ITERATIONS 3
+#define THREADS_PER_BLOCK 512                                                                   //定义thread_per_block = 512
+#define GRAPH_LAUNCH_ITERATIONS 3                                                               //graph_launch_interations = 3 迭代次数
 
-typedef struct callBackData {
-  const char *fn_name;
-  double *data;
+typedef struct callBackData {                                                                   //创建一个结构体叫callBackData，并且声明了一个结构体变量 callBackData_t
+  const char *fn_name;                                                                          //里面有两个变量 字符型指针 fn_name
+  double *data;                                                                                 //             double型指针 data
 } callBackData_t;
+                                                                                                
 
-__global__ void reduce(float *inputVec, double *outputVec, size_t inputSize,
-                       size_t outputSize) {
-  __shared__ double tmp[THREADS_PER_BLOCK];
-  
-//Handle to thread block group
-  cg::thread_block cta = cg::this_thread_block();
-  
-  size_t globaltid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  double temp_sum = 0.0;
-  for (int i = globaltid; i < inputSize; i += gridDim.x * blockDim.x) {
+__global__ void reduce(float *inputVec, double *outputVec, size_t inputSize,size_t outputSize) {//kernel    名字是reduce 归约算法
+  __shared__ double tmp[THREADS_PER_BLOCK];                                                     //在共享内存定义一个数组 tmp 大小是threads_per_block=512
+  
+  cg::thread_block cta = cg::this_thread_block();                                               //Handle to thread block group
+  
+  size_t globaltid = blockIdx.x * blockDim.x + threadIdx.x;                                     //size_t类型的线程号 globaltid
+
+  double temp_sum = 0.0;                                                                        //定义一个中间变量 temp_sum = 0
+  for (int i = globaltid; i < inputSize; i += gridDim.x * blockDim.x) {                         //
     temp_sum += (double)inputVec[i];
   }
   tmp[cta.thread_rank()] = temp_sum;

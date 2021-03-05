@@ -45,24 +45,24 @@ typedef struct callBackData {                                                   
 __global__ void reduce(float *inputVec, double *outputVec, size_t inputSize,size_t outputSize) {//kernel    名字是reduce 归约算法
   __shared__ double tmp[THREADS_PER_BLOCK];                                                     //在共享内存定义一个数组 tmp 大小是threads_per_block=512
   
-  cg::thread_block cta = cg::this_thread_block();                                               //Handle to thread block group
+  cg::thread_block cta = cg::this_thread_block();                                               //Handle to thread block group 将线程块内所有线程打包为一个协作组
   
   size_t globaltid = blockIdx.x * blockDim.x + threadIdx.x;                                     //size_t类型的线程号 globaltid
 
   double temp_sum = 0.0;                                                                        //定义一个中间变量 temp_sum = 0
-  for (int i = globaltid; i < inputSize; i += gridDim.x * blockDim.x) {                         //
+  for (int i = globaltid; i < inputSize; i += gridDim.x * blockDim.x) {                         //输入每一个线程块的第一个数相加
     temp_sum += (double)inputVec[i];
   }
-  tmp[cta.thread_rank()] = temp_sum;
+  tmp[cta.thread_rank()] = temp_sum;                                                            //cta.thread_rank()获得线程在协作组内的编号
 
-  cg::sync(cta);
+  cg::sync(cta);                                                                                 //cta同步
 
-  cg::thread_block_tile<32> tile32 = cg::tiled_partition<32>(cta);
+  cg::thread_block_tile<32> tile32 = cg::tiled_partition<32>(cta);                              //每32个线程分割为一个协作组（只能使用 2 的整数次幂）
 
   double beta = temp_sum;
   double temp;
 
-  for (int i = tile32.size() / 2; i > 0; i >>= 1) {
+  for (int i = tile32.size() / 2; i > 0; i >>= 1) {                                              //归约求和
     if (tile32.thread_rank() < i) {
       temp = tmp[cta.thread_rank() + i];
       beta += temp;

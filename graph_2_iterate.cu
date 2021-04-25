@@ -58,7 +58,7 @@ int main()
  	cudaMemcpyAsync(dev_b,host_b,N * sizeof(int),cudaMemcpyHostToDevice);
 	cudaDeviceSynchronize();
 	cudaGraphSample(dev_a,dev_b,dev_c);
-	cudaMemcpyAsync(host_c,dev_r,N * sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpyAsync(host_c,dev_c,N * sizeof(int),cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
 	for(i=0;i<10;i++)
 	{
